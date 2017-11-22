@@ -1,0 +1,30 @@
+---
+
+- name: Install libselinux if needed - required for ansible selinux module
+  yum: name=libselinux-python state=present
+  sudo: yes
+  when: ansible_os_family == 'RedHat' and ansible_selinux == false
+
+- name: Update apt cache (Debian).
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  sudo: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install libselinux if needed - required for ansible selinux module
+  apt: 
+    name: selinux
+    state: present
+  sudo: yes
+  when: ansible_os_family == 'Debian' and ansible_selinux == false
+
+- name: Configuring selinux (system)
+  selinux: state={{selinux_state}}
+  sudo: yes
+
+- name: Configuring selinux (current session)
+  command: setenforce 0
+  when: selinux_state == "disabled"
+  sudo: yes
+  ignore_errors: yes    # Strange, but if SELinux is already disabled, this command returns 1.
